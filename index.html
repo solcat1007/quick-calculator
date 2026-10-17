@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>极简计算器 | Quick Calculator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:#fff;color:#333;display:flex;justify-content:center;align-items:center;min-height:100vh}
+.container{width:100%;max-width:360px;padding:24px}
+.lang-btn{position:fixed;top:16px;left:16px;background:#00BCD4;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit;z-index:10}
+.lang-btn:hover{background:#0097A7}
+h1{font-size:22px;font-weight:600;color:#00BCD4;margin-bottom:20px;text-align:center}
+.display{background:#f0f8f9;border-radius:12px;padding:16px 20px;margin-bottom:16px;text-align:right}
+.expression{font-size:16px;color:#333;min-height:24px;word-break:break-all}
+.result{font-size:36px;font-weight:700;color:#00BCD4;min-height:44px;line-height:1.2;word-break:break-all}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.grid button{padding:16px 8px;border:none;border-radius:10px;font-size:18px;cursor:pointer;font-family:inherit;transition:all .15s;font-weight:500}
+.btn-num{background:#fff;color:#333;border:1px solid #e0f7fa}
+.btn-num:hover{background:#e0f7fa}
+.btn-op{background:#00BCD4;color:#fff}
+.btn-op:hover{background:#0097A7}
+.btn-func{background:#e0f7fa;color:#00BCD4}
+.btn-func:hover{background:#80deea}
+.btn-eq{background:#006064;color:#fff}
+.btn-eq:hover{background:#004D52}
+</style>
+</head>
+<body>
+
+<button class="lang-btn" id="langBtn" onclick="toggleLang()">EN</button>
+
+<div class="container">
+  <h1 data-key="title">极简计算器</h1>
+  <div class="display">
+    <div class="expression" id="expression">&nbsp;</div>
+    <div class="result" id="result">0</div>
+  </div>
+  <div class="grid" id="keypad">
+    <button class="btn-func" data-key="C">C</button>
+    <button class="btn-func" data-key="+/-">+/-</button>
+    <button class="btn-func" data-key="%">%</button>
+    <button class="btn-op" data-key="/">&divide;</button>
+    <button class="btn-num" data-key="7">7</button>
+    <button class="btn-num" data-key="8">8</button>
+    <button class="btn-num" data-key="9">9</button>
+    <button class="btn-op" data-key="*">&times;</button>
+    <button class="btn-num" data-key="4">4</button>
+    <button class="btn-num" data-key="5">5</button>
+    <button class="btn-num" data-key="6">6</button>
+    <button class="btn-op" data-key="-">-</button>
+    <button class="btn-num" data-key="1">1</button>
+    <button class="btn-num" data-key="2">2</button>
+    <button class="btn-num" data-key="3">3</button>
+    <button class="btn-op" data-key="+">+</button>
+    <button class="btn-num" data-key="0" style="grid-column:span 2">0</button>
+    <button class="btn-num" data-key=".">.</button>
+    <button class="btn-eq" data-key="=">=</button>
+  </div>
+</div>
+
+<script>
+const zh = { title:"极简计算器", error:"错误" };
+const en = { title:"Quick Calculator", error:"Error" };
+let lang = localStorage.getItem('calc_lang') || 'zh';
+let ui = lang === 'zh' ? zh : en;
+function toggleLang(){ lang = lang === 'zh' ? 'en' : 'zh'; ui = lang === 'zh' ? zh : en; localStorage.setItem('calc_lang', lang); updateUI(); }
+function updateUI(){ document.getElementById('langBtn').textContent = lang === 'zh' ? 'EN' : '中'; document.querySelectorAll('[data-key]').forEach(el=>{ const k=el.getAttribute('data-key'); if(ui[k]) el.textContent=ui[k]; }); }
+
+let expr = '', current = '0', resetScreen = false, lastOp = '';
+
+function updateDisplay(){
+  document.getElementById('expression').textContent = expr || '\xa0';
+  document.getElementById('result').textContent = current;
+}
+
+function input(key){
+  if(key === 'C'){ expr = ''; current = '0'; resetScreen = false; lastOp = ''; }
+  else if(key === '+/-'){
+    if(current !== '0' && current !== ui.error) current = String(parseFloat(current) * -1);
+  }
+  else if(key === '%'){
+    if(current !== ui.error) current = String(parseFloat(current) / 100);
+  }
+  else if('0123456789.'.includes(key)){
+    if(resetScreen){ current = ''; resetScreen = false; }
+    if(key === '.' && current.includes('.')) return;
+    if(current === '0' && key !== '.') current = key;
+    else current += key;
+  }
+  else if('+-*/'.includes(key)){
+    if(current === ui.error) return;
+    if(resetScreen && lastOp){
+      expr = expr.slice(0,-1) + key;
+    } else {
+      expr += current + key;
+    }
+    lastOp = key; resetScreen = false; current = '0';
+  }
+  else if(key === '='){
+    if(current === ui.error) return;
+    expr += current;
+    try {
+      const sanitized = expr.replace(/[^0-9+\-*/().]/g,'');
+      const result = Function('"use strict"; return (' + sanitized + ')')();
+      current = Number.isFinite(result) ? String(parseFloat(result.toFixed(10))) : ui.error;
+    } catch(e){ current = ui.error; }
+    expr = ''; resetScreen = true; lastOp = '';
+  }
+  updateDisplay();
+}
+
+document.querySelectorAll('#keypad button').forEach(btn => {
+  btn.addEventListener('click', () => input(btn.dataset.key));
+});
+
+document.addEventListener('keydown', e => {
+  const map = { Enter:'=', Escape:'C', '/':'/', '*':'*', '-':'-', '+':'+', '%':'%', '.':'.' };
+  let k = e.key;
+  if(k === 'Enter') k = '=';
+  if(k === 'Escape') k = 'C';
+  if('0123456789'.includes(k) || map[k] === k || map[k]) input(map[k] || k);
+});
+
+function requestFullscreenWrapper(){
+  const el = document.documentElement;
+  if(el.requestFullscreen){ el.requestFullscreen().catch(()=>{}); }
+  else if(el.webkitRequestFullscreen){ el.webkitRequestFullscreen(); }
+}
+window.addEventListener('load', ()=>{ updateUI(); updateDisplay(); setTimeout(requestFullscreenWrapper, 500); });
+document.addEventListener('keydown', e => { if(e.key==='Escape'&&document.fullscreenElement&&document.exitFullscreen) document.exitFullscreen(); });
+</script>
+</body>
+</html>
