@@ -1,134 +1,296 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>极简计算器 | Quick Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>计算器 · 快速计算</title>
+<meta name="description" content="支持键盘输入的快速计算器，带历史记录">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg">
+<meta name="theme-color" content="#78909c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="计算器">
 <style>
+
+:root{
+  --bg:#f4f5f7;           /* 页面底色：浅灰，避免纯白刺眼 */
+  --bg-glow:#ffffff;      /* 顶部径向光晕色，制造轻微的空间感 */
+  --surface:#ffffff;      /* 卡片底色 */
+  --surface-2:#fafbfc;    /* 卡片内的次级区块（输入框、结果区） */
+  --text:#16181d;         /* 主文字 */
+  --soft:#5d636e;         /* 次要文字 */
+  --mute:#8b929e;         /* 弱化文字（提示、单位、占位符） */
+  --line:#e6e8ec;         /* 分割线与边框 */
+  --accent:#26a69a;       /* 强调色（各玩具不同） */
+  --accent-soft:#e6f4f2;  /* 强调色的浅色版，用于底色块 */
+  --r-lg:20px; --r-md:14px; --r-sm:10px;
+  --ease:cubic-bezier(.4,0,.2,1);
+  --shadow:0 1px 2px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.06);
+}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:#fff;color:#333;display:flex;justify-content:center;align-items:center;min-height:100vh}
-.container{width:100%;max-width:360px;padding:24px}
-.lang-btn{position:fixed;top:16px;left:16px;background:#00BCD4;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit;z-index:10}
-.lang-btn:hover{background:#0097A7}
-h1{font-size:22px;font-weight:600;color:#00BCD4;margin-bottom:20px;text-align:center}
-.display{background:#f0f8f9;border-radius:12px;padding:16px 20px;margin-bottom:16px;text-align:right}
-.expression{font-size:16px;color:#333;min-height:24px;word-break:break-all}
-.result{font-size:36px;font-weight:700;color:#00BCD4;min-height:44px;line-height:1.2;word-break:break-all}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.grid button{padding:16px 8px;border:none;border-radius:10px;font-size:18px;cursor:pointer;font-family:inherit;transition:all .15s;font-weight:500}
-.btn-num{background:#fff;color:#333;border:1px solid #e0f7fa}
-.btn-num:hover{background:#e0f7fa}
-.btn-op{background:#00BCD4;color:#fff}
-.btn-op:hover{background:#0097A7}
-.btn-func{background:#e0f7fa;color:#00BCD4}
-.btn-func:hover{background:#80deea}
-.btn-eq{background:#006064;color:#fff}
-.btn-eq:hover{background:#004D52}
+
+body{
+  font-family:system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  background:var(--bg);
+  /* 顶部一层极淡光晕，比死板的纯色更有层次 */
+  background-image:radial-gradient(120% 80% at 50% 0%, var(--bg-glow) 0%, rgba(255,255,255,0) 62%);
+  background-attachment:fixed;
+  color:var(--text);
+  min-height:100dvh;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:24px; -webkit-font-smoothing:antialiased;
+}
+
+.app{width:100%; max-width:480px; display:flex; flex-direction:column; align-items:center; gap:20px}
+
+.head{text-align:center}
+.head h1{font-size:22px; font-weight:600; letter-spacing:.5px}
+.head p{font-size:13px; color:var(--mute); margin-top:6px}
+
+.card{
+  width:100%; background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r-lg); padding:22px; box-shadow:var(--shadow);
+}
+
+.stage{
+  width:288px; height:288px; position:relative;
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:50%; box-shadow:var(--shadow);
+  display:flex; align-items:center; justify-content:center;
+}
+.stage canvas{border-radius:50%}
+
+.phase{
+  font-size:29px; font-weight:300; letter-spacing:6px;
+  color:var(--accent); min-height:42px; text-align:center;
+  transition:color .4s var(--ease);
+}
+.cd{font-size:15px; color:var(--soft); font-variant-numeric:tabular-nums; min-height:22px}
+.meta{font-size:13px; color:var(--mute); min-height:20px; text-align:center}
+
+.row{display:flex; gap:10px; flex-wrap:wrap; justify-content:center}
+.stats{display:flex; gap:10px; width:100%}
+.stat{
+  flex:1; background:var(--surface-2); border:1px solid var(--line);
+  border-radius:var(--r-md); padding:12px; text-align:center;
+}
+.stat .k{font-size:11px; color:var(--mute); letter-spacing:1px}
+.stat .v{font-size:21px; font-weight:600; margin-top:3px; font-variant-numeric:tabular-nums}
+
+.chip{
+  padding:9px 18px; font-size:13px; font-weight:500; font-family:inherit;
+  background:var(--surface); color:var(--soft);
+  border:1px solid var(--line); border-radius:999px; cursor:pointer;
+  transition:all .2s var(--ease);
+}
+.chip:hover{border-color:var(--accent); color:var(--accent)}
+.chip.active{
+  background:var(--accent); border-color:var(--accent); color:#fff;
+  box-shadow:0 4px 14px rgba(0,0,0,.14);
+}
+
+.btn{
+  padding:13px 42px; font-size:15px; font-weight:600; font-family:inherit;
+  letter-spacing:3px; background:var(--accent); color:#fff;
+  border:none; border-radius:var(--r-md); cursor:pointer;
+  transition:transform .15s var(--ease), box-shadow .2s var(--ease);
+  box-shadow:0 6px 20px rgba(0,0,0,.16);
+}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn.ghost{background:transparent; border:1px solid var(--line); color:var(--soft); box-shadow:none}
+
+.lang{
+  position:fixed; top:16px; right:16px; z-index:20;
+  padding:7px 14px; font-size:12px; font-weight:600; font-family:inherit;
+  background:var(--surface); color:var(--soft);
+  border:1px solid var(--line); border-radius:999px; cursor:pointer;
+  transition:all .2s var(--ease);
+}
+.lang:hover{border-color:var(--accent); color:var(--accent)}
+
+.hint{font-size:12px; color:var(--mute); text-align:center; line-height:1.7}
+
+@media (max-width:380px){
+  .stage{width:250px;height:250px}
+  .phase{font-size:25px; letter-spacing:4px}
+}
+
+:root{ --accent:#78909c; --accent-soft:#eef1f3; }
+
+.screen{
+  width:100%; background:var(--surface-2); border:1px solid var(--line);
+  border-radius:var(--r-md); padding:18px; text-align:right; margin-bottom:14px;
+}
+.screen .expr{font-size:13px; color:var(--mute); min-height:18px; word-break:break-all}
+.screen .out{font-size:34px; font-weight:600; font-variant-numeric:tabular-nums; word-break:break-all}
+.pad{display:grid; grid-template-columns:repeat(4,1fr); gap:9px}
+.key{
+  padding:16px 0; font-size:18px; font-weight:500; font-family:inherit;
+  background:var(--surface); color:var(--text);
+  border:1px solid var(--line); border-radius:var(--r-md); cursor:pointer;
+  transition:all .15s var(--ease);
+}
+.key:hover{border-color:var(--accent); color:var(--accent)}
+.key:active{transform:scale(.96)}
+.key.op{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
+.key.wide{grid-column:span 2}
+.hist{width:100%; margin-top:14px; max-height:110px; overflow-y:auto;
+  font-size:12px; color:var(--mute); line-height:1.9}
+
 </style>
 </head>
 <body>
+<button class="lang" id="langBtn" onclick="toggleLang()">EN</button>
+<div class="app">
 
-<button class="lang-btn" id="langBtn" onclick="toggleLang()">EN</button>
+  <div class="head">
+    <h1 id="t_title">计算器</h1>
+    <p id="t_sub">支持键盘直接输入</p>
+  </div>
 
-<div class="container">
-  <h1 data-key="title">极简计算器</h1>
-  <div class="display">
-    <div class="expression" id="expression">&nbsp;</div>
-    <div class="result" id="result">0</div>
+  <div class="card">
+    <div class="screen">
+      <div class="expr" id="expr"></div>
+      <div class="out" id="out">0</div>
+    </div>
+    <div class="pad" id="pad"></div>
+    <div class="hist" id="hist"></div>
   </div>
-  <div class="grid" id="keypad">
-    <button class="btn-func" data-key="C">C</button>
-    <button class="btn-func" data-key="+/-">+/-</button>
-    <button class="btn-func" data-key="%">%</button>
-    <button class="btn-op" data-key="/">&divide;</button>
-    <button class="btn-num" data-key="7">7</button>
-    <button class="btn-num" data-key="8">8</button>
-    <button class="btn-num" data-key="9">9</button>
-    <button class="btn-op" data-key="*">&times;</button>
-    <button class="btn-num" data-key="4">4</button>
-    <button class="btn-num" data-key="5">5</button>
-    <button class="btn-num" data-key="6">6</button>
-    <button class="btn-op" data-key="-">-</button>
-    <button class="btn-num" data-key="1">1</button>
-    <button class="btn-num" data-key="2">2</button>
-    <button class="btn-num" data-key="3">3</button>
-    <button class="btn-op" data-key="+">+</button>
-    <button class="btn-num" data-key="0" style="grid-column:span 2">0</button>
-    <button class="btn-num" data-key=".">.</button>
-    <button class="btn-eq" data-key="=">=</button>
-  </div>
+
+  <div class="hint" id="t_hint">Enter 计算 · Esc 清空 · Backspace 退格</div>
+
 </div>
-
 <script>
-const zh = { title:"极简计算器", error:"错误" };
-const en = { title:"Quick Calculator", error:"Error" };
-let lang = localStorage.getItem('calc_lang') || 'zh';
-let ui = lang === 'zh' ? zh : en;
-function toggleLang(){ lang = lang === 'zh' ? 'en' : 'zh'; ui = lang === 'zh' ? zh : en; localStorage.setItem('calc_lang', lang); updateUI(); }
-function updateUI(){ document.getElementById('langBtn').textContent = lang === 'zh' ? 'EN' : '中'; document.querySelectorAll('[data-key]').forEach(el=>{ const k=el.getAttribute('data-key'); if(ui[k]) el.textContent=ui[k]; }); }
 
-let expr = '', current = '0', resetScreen = false, lastOp = '';
+/* ============================================================
+ * 计算器
+ * ------------------------------------------------------------
+ * 安全说明：
+ *   没有直接用 eval()。而是先白名单校验字符
+ *   （只允许数字、小数点、加减乘除、括号、百分号），
+ *   再把 % 转成 /100，最后用 new Function 求值。
+ *   这样即便表达式来自用户输入，也执行不了任意代码。
+ * ========================================================== */
 
-function updateDisplay(){
-  document.getElementById('expression').textContent = expr || '\xa0';
-  document.getElementById('result').textContent = current;
+let expr = '';        /* 当前输入串 */
+let history = [];     /* 历史记录 */
+
+const KEYS = [
+  ['C','fn'], ['(','' ], [')','' ], ['÷','op'],
+  ['7','' ],  ['8','' ], ['9','' ], ['×','op'],
+  ['4','' ],  ['5','' ], ['6','' ], ['-','op'],
+  ['1','' ],  ['2','' ], ['3','' ], ['+','op'],
+  ['0','wide'],['.','' ],['%',''], ['=','op']
+];
+
+const I18N = {
+  zh:{ title:'计算器', sub:'支持键盘直接输入',
+       hint:'Enter 计算 · Esc 清空 · Backspace 退格', err:'错误' },
+  en:{ title:'Calculator', sub:'Type with your keyboard',
+       hint:'Enter to calculate · Esc to clear · Backspace to delete', err:'Error' }
+};
+let lang = 'zh';
+
+/** 生成按键面板 */
+function buildPad(){
+  const pad = document.getElementById('pad');
+  pad.innerHTML = '';
+  KEYS.forEach(function(item){
+    const label = item[0], cls = item[1];
+    const b = document.createElement('button');
+    b.className = 'key' + (cls ? ' ' + cls : '');
+    b.textContent = label;
+    b.onclick = function(){ press(label); };
+    pad.appendChild(b);
+  });
 }
 
-function input(key){
-  if(key === 'C'){ expr = ''; current = '0'; resetScreen = false; lastOp = ''; }
-  else if(key === '+/-'){
-    if(current !== '0' && current !== ui.error) current = String(parseFloat(current) * -1);
+/** 按键处理：区分清空 / 求值 / 普通输入 */
+function press(k){
+  if (k === 'C'){ expr = ''; render(); return; }
+  if (k === '='){ calc(); return; }
+
+  // 避免连续输入两个运算符造成语法错误
+  const last = expr.slice(-1);
+  if ('+-×÷%'.includes(last) && '+-×÷%'.includes(k)){
+    expr = expr.slice(0,-1) + k;
+  } else {
+    expr += k;
   }
-  else if(key === '%'){
-    if(current !== ui.error) current = String(parseFloat(current) / 100);
-  }
-  else if('0123456789.'.includes(key)){
-    if(resetScreen){ current = ''; resetScreen = false; }
-    if(key === '.' && current.includes('.')) return;
-    if(current === '0' && key !== '.') current = key;
-    else current += key;
-  }
-  else if('+-*/'.includes(key)){
-    if(current === ui.error) return;
-    if(resetScreen && lastOp){
-      expr = expr.slice(0,-1) + key;
-    } else {
-      expr += current + key;
-    }
-    lastOp = key; resetScreen = false; current = '0';
-  }
-  else if(key === '='){
-    if(current === ui.error) return;
-    expr += current;
-    try {
-      const sanitized = expr.replace(/[^0-9+\-*/().]/g,'');
-      const result = Function('"use strict"; return (' + sanitized + ')')();
-      current = Number.isFinite(result) ? String(parseFloat(result.toFixed(10))) : ui.error;
-    } catch(e){ current = ui.error; }
-    expr = ''; resetScreen = true; lastOp = '';
-  }
-  updateDisplay();
+  render();
 }
 
-document.querySelectorAll('#keypad button').forEach(btn => {
-  btn.addEventListener('click', () => input(btn.dataset.key));
+/** 求值：先做字符白名单校验，再转换运算符交给 Function */
+function calc(){
+  if (!expr) return;
+
+  // 只允许 数字 . + - × ÷ % ( ) 和空格
+  if (!/^[0-9.+\-×÷%() ]+$/.test(expr)){
+    document.getElementById('out').textContent = I18N[lang].err;
+    return;
+  }
+
+  let js = expr.replace(/×/g,'*').replace(/÷/g,'/');
+  js = js.replace(/(\d+(?:\.\d+)?)%/g, '($1/100)');   /* 50% → (50/100) */
+
+  let result;
+  try {
+    result = new Function('return ' + js)();
+  } catch(e){
+    result = I18N[lang].err;
+  }
+
+  if (typeof result === 'number' && !isFinite(result)) result = I18N[lang].err;
+
+  history.unshift(expr + ' = ' + result);
+  history = history.slice(0, 20);            /* 只留最近 20 条 */
+
+  expr = (typeof result === 'number') ? String(result) : '';
+  render();
+}
+
+function render(){
+  document.getElementById('expr').textContent = expr;
+  document.getElementById('out').textContent  = expr || '0';
+  document.getElementById('hist').innerHTML   = history.join('<br>');
+}
+
+function refresh(){
+  const L = I18N[lang];
+  document.getElementById('t_title').textContent = L.title;
+  document.getElementById('t_sub').textContent   = L.sub;
+  document.getElementById('t_hint').textContent  = L.hint;
+  document.getElementById('langBtn').textContent = (lang==='zh') ? 'EN' : '中';
+}
+function toggleLang(){ lang = (lang==='zh') ? 'en' : 'zh'; refresh(); }
+
+/* ---------- 键盘映射 ---------- */
+document.addEventListener('keydown', function(e){
+  const k = e.key;
+  if (/^[0-9.]$/.test(k))              { press(k); e.preventDefault(); return; }
+  if (k === '+') { press('+'); e.preventDefault(); return; }
+  if (k === '-') { press('-'); e.preventDefault(); return; }
+  if (k === '*') { press('×'); e.preventDefault(); return; }
+  if (k === '/') { press('÷'); e.preventDefault(); return; }
+  if (k === '(' || k === ')') { press(k); e.preventDefault(); return; }
+  if (k === '%') { press('%'); e.preventDefault(); return; }
+  if (k === 'Enter' || k === '=') { calc(); e.preventDefault(); return; }
+  if (k === 'Escape') { expr=''; render(); e.preventDefault(); return; }
+  if (k === 'Backspace') { expr = expr.slice(0,-1); render(); e.preventDefault(); return; }
 });
 
-document.addEventListener('keydown', e => {
-  const map = { Enter:'=', Escape:'C', '/':'/', '*':'*', '-':'-', '+':'+', '%':'%', '.':'.' };
-  let k = e.key;
-  if(k === 'Enter') k = '=';
-  if(k === 'Escape') k = 'C';
-  if('0123456789'.includes(k) || map[k] === k || map[k]) input(map[k] || k);
-});
+buildPad();
+refresh();
 
-function requestFullscreenWrapper(){
-  const el = document.documentElement;
-  if(el.requestFullscreen){ el.requestFullscreen().catch(()=>{}); }
-  else if(el.webkitRequestFullscreen){ el.webkitRequestFullscreen(); }
+/* ---------- PWA 注册 ----------
+ * 注册 Service Worker 后本页被缓存，断网也能打开。
+ * 放在最后且 catch 掉异常：即使浏览器不支持也不影响正常功能。 */
+if ('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(){});
+  });
 }
-window.addEventListener('load', ()=>{ updateUI(); updateDisplay(); setTimeout(requestFullscreenWrapper, 500); });
-document.addEventListener('keydown', e => { if(e.key==='Escape'&&document.fullscreenElement&&document.exitFullscreen) document.exitFullscreen(); });
 </script>
 </body>
 </html>
