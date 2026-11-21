@@ -226,8 +226,8 @@ function press(k){
  * 支持 + - × ÷、括号、一元正负号和百分号。
  */
 function evaluateExpression(source){
-  const tokens = source.match(/(?:\\d+(?:\\.\\d*)?|\\.\\d+)|[()+\\-×÷%]/g) || [];
-  if (tokens.join('') !== source.replace(/\\s+/g,'')) {
+  const tokens = source.match(/(?:\d+(?:\.\d*)?|\.\d+)|[()+\-×÷%]/g) || [];
+  if (tokens.join('') !== source.replace(/\s+/g,'')) {
     throw new Error('invalid token');
   }
   let pos = 0;
@@ -242,7 +242,7 @@ function evaluateExpression(source){
       if (take() !== ')') throw new Error('missing )');
       return value;
     }
-    if (t === undefined || !/^(?:\\d+(?:\\.\\d*)?|\\.\\d+)$/.test(t)) {
+    if (t === undefined || !/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(t)) {
       throw new Error('number expected');
     }
     const value = Number(t);
