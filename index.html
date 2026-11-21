@@ -221,39 +221,88 @@ function press(k){
   render();
 }
 
-/** 求值：先做字符白名单校验，再转换运算符交给 Function */
-function calc(){
-  if (!expr) return;
+/**
+ * 安全表达式解析器：递归下降，不执行动态代码。
+ * 支持 + - × ÷、括号、一元正负号和百分号。
+ */
+function evaluateExpression(source){
+  const tokens = source.match(/(?:\\d+(?:\\.\\d*)?|\\.\\d+)|[()+\\-×÷%]/g) || [];
+  if (tokens.join('') !== source.replace(/\\s+/g,'')) {
+    throw new Error('invalid token');
+  }
+  let pos = 0;
+  function peek(){ return tokens[pos]; }
+  function take(){ return tokens[pos++]; }
+  function primary(){
+    const t = take();
+    if (t === '+') return primary();
+    if (t === '-') return -primary();
+    if (t === '(') {
+      const value = expression();
+      if (take() !== ')') throw new Error('missing )');
+      return value;
+    }
+    if (t === undefined || !/^(?:\\d+(?:\\.\\d*)?|\\.\\d+)$/.test(t)) {
+      throw new Error('number expected');
+    }
+    const value = Number(t);
+    if (!Number.isFinite(value)) throw new Error('invalid number');
+    return value;
+  }
+  function percentage(){
+    let value = primary();
+    while (peek() === '%') { take(); value /= 100; }
+    return value;
+  }
+  function term(){
+    let value = percentage();
+    while (peek() === '×' || peek() === '÷') {
+      const op = take();
+      const rhs = percentage();
+      value = op === '×' ? value * rhs : value / rhs;
+    }
+    return value;
+  }
+  function expression(){
+    let value = term();
+    while (peek() === '+' || peek() === '-') {
+      const op = take();
+      const rhs = term();
+      value = op === '+' ? value + rhs : value - rhs;
+    }
+    return value;
+  }
+  if (!tokens.length) throw new Error('empty expression');
+  const result = expression();
+  if (pos !== tokens.length || !Number.isFinite(result)) throw new Error('invalid expression');
+  return result;
+}
 
-  // 只允许 数字 . + - × ÷ % ( ) 和空格
-  if (!/^[0-9.+\-×÷%() ]+$/.test(expr)){
+function calc(){
+  if (!expr.trim()) return;
+  let result;
+  try {
+    result = evaluateExpression(expr);
+  } catch(e) {
     document.getElementById('out').textContent = I18N[lang].err;
     return;
   }
 
-  let js = expr.replace(/×/g,'*').replace(/÷/g,'/');
-  js = js.replace(/(\d+(?:\.\d+)?)%/g, '($1/100)');   /* 50% → (50/100) */
-
-  let result;
-  try {
-    result = new Function('return ' + js)();
-  } catch(e){
-    result = I18N[lang].err;
-  }
-
-  if (typeof result === 'number' && !isFinite(result)) result = I18N[lang].err;
-
   history.unshift(expr + ' = ' + result);
-  history = history.slice(0, 20);            /* 只留最近 20 条 */
-
-  expr = (typeof result === 'number') ? String(result) : '';
+  history = history.slice(0, 20);
+  expr = String(result);
   render();
 }
 
 function render(){
   document.getElementById('expr').textContent = expr;
   document.getElementById('out').textContent  = expr || '0';
-  document.getElementById('hist').innerHTML   = history.join('<br>');
+  const hist = document.getElementById('hist');
+  hist.replaceChildren();
+  history.forEach(function(item, index){
+    if (index) hist.appendChild(document.createElement('br'));
+    hist.appendChild(document.createTextNode(item));
+  });
 }
 
 function refresh(){
