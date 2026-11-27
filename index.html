@@ -3,150 +3,88 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>计算器 · 快速计算</title>
-<meta name="description" content="支持键盘输入的快速计算器，带历史记录">
+<title>快速计算器 · v2.0</title>
+<meta name="description" content="支持键盘完整输入、幂运算、百分比、历史记录与一键复制的计算器">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg">
 <meta name="theme-color" content="#78909c">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="计算器">
 <style>
-
 :root{
-  --bg:#f4f5f7;           /* 页面底色：浅灰，避免纯白刺眼 */
-  --bg-glow:#ffffff;      /* 顶部径向光晕色，制造轻微的空间感 */
-  --surface:#ffffff;      /* 卡片底色 */
-  --surface-2:#fafbfc;    /* 卡片内的次级区块（输入框、结果区） */
-  --text:#16181d;         /* 主文字 */
-  --soft:#5d636e;         /* 次要文字 */
-  --mute:#8b929e;         /* 弱化文字（提示、单位、占位符） */
-  --line:#e6e8ec;         /* 分割线与边框 */
-  --accent:#26a69a;       /* 强调色（各玩具不同） */
-  --accent-soft:#e6f4f2;  /* 强调色的浅色版，用于底色块 */
+  --bg:#f4f6f9; --surface:#ffffff; --surface-2:#f7f9fb;
+  --text:#16181d; --soft:#5d636e; --mute:#8b929e; --line:#e6e8ec;
+  --accent:#78909c; --accent-soft:#eef1f3;
   --r-lg:20px; --r-md:14px; --r-sm:10px;
   --ease:cubic-bezier(.4,0,.2,1);
-  --shadow:0 1px 2px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.06);
+  --shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px rgba(16,24,40,.06);
 }
 *{margin:0;padding:0;box-sizing:border-box}
-
 body{
   font-family:system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
   background:var(--bg);
-  /* 顶部一层极淡光晕，比死板的纯色更有层次 */
-  background-image:radial-gradient(120% 80% at 50% 0%, var(--bg-glow) 0%, rgba(255,255,255,0) 62%);
-  background-attachment:fixed;
-  color:var(--text);
-  min-height:100dvh;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  padding:24px; -webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(120% 70% at 50% 0%,var(--accent-soft) 0%,rgba(255,255,255,0) 62%);
+  background-attachment:fixed;color:var(--text);min-height:100dvh;
+  display:flex;flex-direction:column;align-items:center;padding:20px 16px 44px;
+  -webkit-font-smoothing:antialiased;
 }
-
-.app{width:100%; max-width:480px; display:flex; flex-direction:column; align-items:center; gap:20px}
-
-.head{text-align:center}
-.head h1{font-size:22px; font-weight:600; letter-spacing:.5px}
-.head p{font-size:13px; color:var(--mute); margin-top:6px}
-
-.card{
-  width:100%; background:var(--surface); border:1px solid var(--line);
-  border-radius:var(--r-lg); padding:22px; box-shadow:var(--shadow);
-}
-
-.stage{
-  width:288px; height:288px; position:relative;
-  background:var(--surface); border:1px solid var(--line);
-  border-radius:50%; box-shadow:var(--shadow);
-  display:flex; align-items:center; justify-content:center;
-}
-.stage canvas{border-radius:50%}
-
-.phase{
-  font-size:29px; font-weight:300; letter-spacing:6px;
-  color:var(--accent); min-height:42px; text-align:center;
-  transition:color .4s var(--ease);
-}
-.cd{font-size:15px; color:var(--soft); font-variant-numeric:tabular-nums; min-height:22px}
-.meta{font-size:13px; color:var(--mute); min-height:20px; text-align:center}
-
-.row{display:flex; gap:10px; flex-wrap:wrap; justify-content:center}
-.stats{display:flex; gap:10px; width:100%}
-.stat{
-  flex:1; background:var(--surface-2); border:1px solid var(--line);
-  border-radius:var(--r-md); padding:12px; text-align:center;
-}
-.stat .k{font-size:11px; color:var(--mute); letter-spacing:1px}
-.stat .v{font-size:21px; font-weight:600; margin-top:3px; font-variant-numeric:tabular-nums}
-
-.chip{
-  padding:9px 18px; font-size:13px; font-weight:500; font-family:inherit;
-  background:var(--surface); color:var(--soft);
-  border:1px solid var(--line); border-radius:999px; cursor:pointer;
-  transition:all .2s var(--ease);
-}
-.chip:hover{border-color:var(--accent); color:var(--accent)}
-.chip.active{
-  background:var(--accent); border-color:var(--accent); color:#fff;
-  box-shadow:0 4px 14px rgba(0,0,0,.14);
-}
-
-.btn{
-  padding:13px 42px; font-size:15px; font-weight:600; font-family:inherit;
-  letter-spacing:3px; background:var(--accent); color:#fff;
-  border:none; border-radius:var(--r-md); cursor:pointer;
-  transition:transform .15s var(--ease), box-shadow .2s var(--ease);
-  box-shadow:0 6px 20px rgba(0,0,0,.16);
-}
-.btn:hover{transform:translateY(-1px)}
-.btn:active{transform:translateY(0)}
-.btn.ghost{background:transparent; border:1px solid var(--line); color:var(--soft); box-shadow:none}
-
+.app{width:100%;max-width:440px;display:flex;flex-direction:column;gap:16px}
+.head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:2px}
+.head h1{font-size:22px;font-weight:700;letter-spacing:.5px}
+.head p{font-size:12px;color:var(--mute);margin-top:5px}
 .lang{
-  position:fixed; top:16px; right:16px; z-index:20;
-  padding:7px 14px; font-size:12px; font-weight:600; font-family:inherit;
-  background:var(--surface); color:var(--soft);
-  border:1px solid var(--line); border-radius:999px; cursor:pointer;
-  transition:all .2s var(--ease);
+  flex-shrink:0;padding:7px 14px;font-size:12px;font-weight:600;font-family:inherit;
+  background:var(--surface);color:var(--soft);border:1px solid var(--line);
+  border-radius:999px;cursor:pointer;transition:all .2s var(--ease);
 }
-.lang:hover{border-color:var(--accent); color:var(--accent)}
-
-.hint{font-size:12px; color:var(--mute); text-align:center; line-height:1.7}
-
-@media (max-width:380px){
-  .stage{width:250px;height:250px}
-  .phase{font-size:25px; letter-spacing:4px}
+.lang:hover{border-color:var(--accent);color:var(--accent)}
+.card{
+  width:100%;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-lg);padding:18px;box-shadow:var(--shadow);
 }
-
-:root{ --accent:#78909c; --accent-soft:#eef1f3; }
-
 .screen{
-  width:100%; background:var(--surface-2); border:1px solid var(--line);
-  border-radius:var(--r-md); padding:18px; text-align:right; margin-bottom:14px;
+  width:100%;background:var(--surface-2);border:1px solid var(--line);
+  border-radius:var(--r-md);padding:16px 18px;text-align:right;margin-bottom:14px;
 }
-.screen .expr{font-size:13px; color:var(--mute); min-height:18px; word-break:break-all}
-.screen .out{font-size:34px; font-weight:600; font-variant-numeric:tabular-nums; word-break:break-all}
-.pad{display:grid; grid-template-columns:repeat(4,1fr); gap:9px}
+.screen .expr{font-size:13px;color:var(--mute);min-height:20px;word-break:break-all}
+.screen .out{font-size:36px;font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all;line-height:1.25}
+.funcbar{display:flex;gap:8px;margin-bottom:12px}
+.funcbar .chip{flex:1;padding:9px 4px;text-align:center}
+.pad{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
 .key{
-  padding:16px 0; font-size:18px; font-weight:500; font-family:inherit;
-  background:var(--surface); color:var(--text);
-  border:1px solid var(--line); border-radius:var(--r-md); cursor:pointer;
-  transition:all .15s var(--ease);
+  padding:15px 0;font-size:18px;font-weight:600;font-family:inherit;
+  background:var(--surface);color:var(--text);border:1px solid var(--line);
+  border-radius:var(--r-md);cursor:pointer;transition:all .15s var(--ease);
 }
-.key:hover{border-color:var(--accent); color:var(--accent)}
-.key:active{transform:scale(.96)}
-.key.op{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
+.key:hover{border-color:var(--accent);color:var(--accent)}
+.key:active{transform:scale(.95)}
+.key.op{background:var(--accent-soft);border-color:#d7dde1;color:var(--accent)}
+.key.eq{background:var(--accent);color:#fff;border-color:var(--accent)}
 .key.wide{grid-column:span 2}
-.hist{width:100%; margin-top:14px; max-height:110px; overflow-y:auto;
-  font-size:12px; color:var(--mute); line-height:1.9}
-
+.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.card-hd .t{font-size:14px;font-weight:600}
+.link{font-family:inherit;font-size:12px;color:var(--mute);background:none;border:0;cursor:pointer}
+.link:hover{color:var(--accent)}
+.hist{display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto}
+.hist-row{display:flex;align-items:center;gap:10px;padding:9px 11px;background:var(--surface-2);
+  border:1px solid var(--line);border-radius:var(--r-sm);cursor:pointer;font-size:13px}
+.hist-row:hover{border-color:var(--accent)}
+.hist-row .he{flex:1;color:var(--soft);word-break:break-all}
+.hist-row .hv{font-weight:600;color:var(--accent)}
+.empty{font-size:12px;color:var(--mute);text-align:center;padding:12px 0}
+.hint{font-size:12px;color:var(--mute);text-align:center;line-height:1.7}
+.toast{position:fixed;left:50%;bottom:32px;transform:translate(-50%,20px);background:rgba(22,24,29,.92);
+  color:#fff;padding:10px 20px;border-radius:999px;font-size:13px;z-index:1000;opacity:0;
+  pointer-events:none;transition:all .25s var(--ease)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (max-width:360px){.key{padding:13px 0;font-size:16px}.screen .out{font-size:30px}}
 </style>
 </head>
 <body>
-<button class="lang" id="langBtn" onclick="toggleLang()">EN</button>
 <div class="app">
-
   <div class="head">
-    <h1 id="t_title">计算器</h1>
-    <p id="t_sub">支持键盘直接输入</p>
+    <div><h1 id="t_title">快速计算器</h1><p id="t_sub">键盘完整支持 · 幂运算 · 历史记录</p></div>
+    <button class="lang" id="langBtn" onclick="toggleLang()">EN</button>
   </div>
 
   <div class="card">
@@ -154,143 +92,367 @@ body{
       <div class="expr" id="expr"></div>
       <div class="out" id="out">0</div>
     </div>
+
+    <div class="funcbar">
+      <button class="chip" onclick="press('%')">%</button>
+      <button class="chip" onclick="press('^')">xʸ</button>
+      <button class="chip" onclick="toggleSign()">±</button>
+      <button class="chip" onclick="copyResult()">⧉ <span id="t_copy">复制</span></button>
+    </div>
+
     <div class="pad" id="pad"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><span class="t" id="t_hist">计算历史</span>
+      <button class="link" id="t_clear" onclick="clearHistory()">清空</button></div>
     <div class="hist" id="hist"></div>
   </div>
 
-  <div class="hint" id="t_hint">Enter 计算 · Esc 清空 · Backspace 退格</div>
-
+  <div class="hint" id="t_hint">Enter 计算 · Esc 清空 · Backspace 退格 · ^ 幂运算</div>
 </div>
-<script>
+<div class="toast" id="toast"></div>
 
+<script>
 /* ============================================================
- * 计算器
+ * 快速计算器 v2.0
  * ------------------------------------------------------------
- * 安全说明：
- *   没有直接用 eval()。而是先白名单校验字符
- *   （只允许数字、小数点、加减乘除、括号、百分号），
- *   再把 % 转成 /100，最后用 new Function 求值。
- *   这样即便表达式来自用户输入，也执行不了任意代码。
+ * 安全说明：不使用 eval()，先白名单校验字符，再把 × ÷ ^ % 转成
+ * 合法的 JS 运算符，最后交给 new Function 求值。
+ * v2.0 新增：幂运算、历史持久化、完整键盘支持、复制结果。
  * ========================================================== */
 
-let expr = '';        /* 当前输入串 */
-let history = [];     /* 历史记录 */
+let expr = '';
+let history = [];
 
 const KEYS = [
-  ['C','fn'], ['(','' ], [')','' ], ['÷','op'],
-  ['7','' ],  ['8','' ], ['9','' ], ['×','op'],
-  ['4','' ],  ['5','' ], ['6','' ], ['-','op'],
-  ['1','' ],  ['2','' ], ['3','' ], ['+','op'],
-  ['0','wide'],['.','' ],['%',''], ['=','op']
+  ['C','fn'], ['⌫',''], ['(','' ], [')','' ],
+  ['7','' ],  ['8','' ], ['9','' ], ['÷','op'],
+  ['4','' ],  ['5','' ], ['6','' ], ['×','op'],
+  ['1','' ],  ['2','' ], ['3','' ], ['-','op'],
+  ['0','wide'],['.','' ],['+','op'],['=','eq']
 ];
 
 const I18N = {
-  zh:{ title:'计算器', sub:'支持键盘直接输入',
-       hint:'Enter 计算 · Esc 清空 · Backspace 退格', err:'错误' },
-  en:{ title:'Calculator', sub:'Type with your keyboard',
-       hint:'Enter to calculate · Esc to clear · Backspace to delete', err:'Error' }
+  zh:{ title:'快速计算器', sub:'键盘完整支持 · 幂运算 · 历史记录',
+       hint:'Enter 计算 · Esc 清空 · Backspace 退格 · ^ 幂运算',
+       copy:'复制', copied:'结果已复制', hist:'计算历史', clear:'清空',
+       empty:'还没有计算记录', err:'错误', calc:'计算' },
+  en:{ title:'Quick Calculator', sub:'Full keyboard · Powers · History',
+       hint:'Enter to calculate · Esc to clear · Backspace · ^ for powers',
+       copy:'Copy', copied:'Result copied', hist:'History', clear:'Clear',
+       empty:'No calculations yet', err:'Error', calc:'Calculate' }
 };
 let lang = 'zh';
 
-/** 生成按键面板 */
 function buildPad(){
   const pad = document.getElementById('pad');
   pad.innerHTML = '';
   KEYS.forEach(function(item){
-    const label = item[0], cls = item[1];
     const b = document.createElement('button');
-    b.className = 'key' + (cls ? ' ' + cls : '');
-    b.textContent = label;
-    b.onclick = function(){ press(label); };
+    b.className = 'key' + (item[1] ? ' ' + item[1] : '');
+    b.textContent = item[0];
+    b.onclick = function(){ press(item[0]); };
     pad.appendChild(b);
   });
 }
 
-/** 按键处理：区分清空 / 求值 / 普通输入 */
 function press(k){
   if (k === 'C'){ expr = ''; render(); return; }
+  if (k === '⌫'){ expr = expr.slice(0,-1); render(); return; }
   if (k === '='){ calc(); return; }
 
-  // 避免连续输入两个运算符造成语法错误
+  const ops = '+-×÷%^';
   const last = expr.slice(-1);
-  if ('+-×÷%'.includes(last) && '+-×÷%'.includes(k)){
-    expr = expr.slice(0,-1) + k;
+  if (ops.includes(last) && ops.includes(k)){
+    expr = expr.slice(0,-1) + k;   /* 连续运算符：替换而非追加 */
   } else {
     expr += k;
   }
   render();
 }
 
-/** 求值：先做字符白名单校验，再转换运算符交给 Function */
+function toggleSign(){
+  if (expr.startsWith('-')) expr = expr.slice(1);
+  else expr = '-' + expr;
+  render();
+}
+
 function calc(){
   if (!expr) return;
-
-  // 只允许 数字 . + - × ÷ % ( ) 和空格
-  if (!/^[0-9.+\-×÷%() ]+$/.test(expr)){
+  if (!/^[0-9.+\-×÷%^() ]+$/.test(expr)){
     document.getElementById('out').textContent = I18N[lang].err;
     return;
   }
-
-  let js = expr.replace(/×/g,'*').replace(/÷/g,'/');
-  js = js.replace(/(\d+(?:\.\d+)?)%/g, '($1/100)');   /* 50% → (50/100) */
-
+  let js = expr.replace(/×/g,'*').replace(/÷/g,'/').replace(/\^/g,'**');
+  js = js.replace(/(\d+(?:\.\d+)?)%/g, '($1/100)');
   let result;
-  try {
-    result = new Function('return ' + js)();
-  } catch(e){
-    result = I18N[lang].err;
-  }
-
+  try { result = new Function('return ' + js)(); }
+  catch(e){ result = I18N[lang].err; }
   if (typeof result === 'number' && !isFinite(result)) result = I18N[lang].err;
 
-  history.unshift(expr + ' = ' + result);
-  history = history.slice(0, 20);            /* 只留最近 20 条 */
-
-  expr = (typeof result === 'number') ? String(result) : '';
+  addHistory(expr, result);
+  expr = (typeof result === 'number') ? String(Number(result.toPrecision(12))) : '';
   render();
 }
 
 function render(){
   document.getElementById('expr').textContent = expr;
   document.getElementById('out').textContent  = expr || '0';
-  document.getElementById('hist').innerHTML   = history.join('<br>');
 }
+
+/* ---------- 历史持久化 ---------- */
+const HKEY = 'quick_calc_history_v2';
+function loadHistory(){ try{ history = JSON.parse(localStorage.getItem(HKEY)) || []; }catch(e){ history = []; } }
+function saveHistory(){ try{ localStorage.setItem(HKEY, JSON.stringify(history)); }catch(e){} }
+function addHistory(e, r){
+  if (r === I18N[lang].err) return;
+  history.unshift({ e:e, r:r });
+  history = history.slice(0, 30);
+  saveHistory(); renderHistory();
+}
+function clearHistory(){ history = []; saveHistory(); renderHistory(); toast(I18N[lang].clear); }
+function renderHistory(){
+  const box = document.getElementById('hist');
+  box.innerHTML = '';
+  if (!history.length){
+    const d = document.createElement('div');
+    d.className = 'empty'; d.textContent = I18N[lang].empty;
+    box.appendChild(d); return;
+  }
+  history.forEach(function(h){
+    const row = document.createElement('div');
+    row.className = 'hist-row';
+    const e = document.createElement('span'); e.className = 'he'; e.textContent = h.e;
+    const r = document.createElement('span'); r.className = 'hv'; r.textContent = '= ' + h.r;
+    row.appendChild(e); row.appendChild(r);
+    row.onclick = function(){ expr = h.e; render(); };
+    box.appendChild(row);
+  });
+}
+
+/* ---------- 复制 ---------- */
+function copyResult(){
+  const txt = document.getElementById('out').textContent;
+  if (!txt || txt === '0') return;
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){ toast(I18N[lang].copied); }, fallback);
+  } else fallback();
+  function fallback(){
+    const ta = document.createElement('textarea');
+    ta.value = txt; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta); toast(I18N[lang].copied);
+  }
+}
+let toastTimer = null;
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = '☠ ' + msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 1600);
+}
+
+/* ---------- 完整键盘映射 ---------- */
+document.addEventListener('keydown', function(e){
+  const k = e.key;
+  if (/^[0-9.]$/.test(k)){ press(k); e.preventDefault(); return; }
+  if (k === '+' || k === '-'){ press(k); e.preventDefault(); return; }
+  if (k === '*' || k === 'x' || k === 'X' || k === '×'){ press('×'); e.preventDefault(); return; }
+  if (k === '/' || k === '÷'){ press('÷'); e.preventDefault(); return; }
+  if (k === '^'){ press('^'); e.preventDefault(); return; }
+  if (k === '(' || k === ')' || k === '%'){ press(k); e.preventDefault(); return; }
+  if (k === 'Enter' || k === '='){ calc(); e.preventDefault(); return; }
+  if (k === 'Escape' || k === 'c' || k === 'C'){ expr = ''; render(); e.preventDefault(); return; }
+  if (k === 'Backspace'){ expr = expr.slice(0,-1); render(); e.preventDefault(); return; }
+  if (k === 'Delete'){ expr = ''; render(); e.preventDefault(); return; }
+});
 
 function refresh(){
   const L = I18N[lang];
-  document.getElementById('t_title').textContent = L.title;
-  document.getElementById('t_sub').textContent   = L.sub;
-  document.getElementById('t_hint').textContent  = L.hint;
+  ['title','sub','hint','copy','hist','clear'].forEach(function(k){
+    document.getElementById('t_'+k).textContent = L[k];
+  });
   document.getElementById('langBtn').textContent = (lang==='zh') ? 'EN' : '中';
+  renderHistory();
 }
 function toggleLang(){ lang = (lang==='zh') ? 'en' : 'zh'; refresh(); }
 
-/* ---------- 键盘映射 ---------- */
-document.addEventListener('keydown', function(e){
-  const k = e.key;
-  if (/^[0-9.]$/.test(k))              { press(k); e.preventDefault(); return; }
-  if (k === '+') { press('+'); e.preventDefault(); return; }
-  if (k === '-') { press('-'); e.preventDefault(); return; }
-  if (k === '*') { press('×'); e.preventDefault(); return; }
-  if (k === '/') { press('÷'); e.preventDefault(); return; }
-  if (k === '(' || k === ')') { press(k); e.preventDefault(); return; }
-  if (k === '%') { press('%'); e.preventDefault(); return; }
-  if (k === 'Enter' || k === '=') { calc(); e.preventDefault(); return; }
-  if (k === 'Escape') { expr=''; render(); e.preventDefault(); return; }
-  if (k === 'Backspace') { expr = expr.slice(0,-1); render(); e.preventDefault(); return; }
-});
-
+loadHistory();
 buildPad();
 refresh();
 
-/* ---------- PWA 注册 ----------
- * 注册 Service Worker 后本页被缓存，断网也能打开。
- * 放在最后且 catch 掉异常：即使浏览器不支持也不影响正常功能。 */
 if ('serviceWorker' in navigator){
   window.addEventListener('load', function(){
     navigator.serviceWorker.register('./sw.js').catch(function(){});
   });
 }
+</script>
+<!-- SOLCAT EASTER EGG PROTOCOL v2.0 -->
+<script>
+/* ============================================================
+ * SOLCAT EASTER EGG PROTOCOL v2.0 — 通用彩蛋引擎
+ * 零依赖 · 单文件 · 可注入任意 HTML 项目
+ * ============================================================ */
+(function(){
+  'use strict';
+  if (window.__SOLCAT_EGG__) return;
+  window.__SOLCAT_EGG__ = { version:'2.0', unlocked:new Set(), onUnlock:[] };
+
+  var E = window.__SOLCAT_EGG__;
+  var KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+  var seq = [], logoClicks = 0, logoTimer = null;
+
+  /* ---------- 1. 控制台署名（ASCII Art） ---------- */
+  function banner(){
+    var art = '%c\n  ____             _   _       _   _   \n' +
+      ' / ___|  ___  _ __| |_(_) __ _| |_| |__  \n' +
+      ' \\___ \\ / _ \\| \'__| __| |/ _` | __| \'_ \\ \n' +
+      '  ___) | (_) | |  | |_| | (_| | |_| | | |\n' +
+      ' |____/ \\___/|_|   \\__|_|\\__,_|\\__|_| |_|\n';
+    console.log(art, 'color:#26a69a;font-family:monospace;font-weight:bold');
+    console.log('%c☠ SOLCAT EASTER EGG PROTOCOL v2.0 — 你找到了隐藏入口',
+      'color:#666;font-size:11px;letter-spacing:1px');
+    console.log('%c提示：↑↑↓↓←→←→BA · 连点标题 5 次 · 输入 solcat · Ctrl+Shift+T',
+      'color:#999;font-size:10px');
+  }
+
+  /* ---------- 2. 烟花彩带粒子 ---------- */
+  function confetti(){
+    var colors = ['#26a69a','#42a5f5','#ef5350','#ffca28','#ab47bc','#66bb6a','#ff7043'];
+    var cvs = document.createElement('canvas');
+    cvs.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:99999';
+    document.body.appendChild(cvs);
+    var ctx = cvs.getContext('2d'), W = cvs.width = innerWidth, H = cvs.height = innerHeight;
+    var P = [];
+    for (var i=0;i<180;i++) P.push({
+      x:W/2+(Math.random()-.5)*120, y:H*.4+(Math.random()-.5)*40,
+      vx:(Math.random()-.5)*18, vy:-Math.random()*16-4,
+      c:colors[i%colors.length], s:Math.random()*8+4, r:Math.random()*6,
+      life:1, spin:(Math.random()-.5)*.3
+    });
+    var f = 0;
+    (function draw(){
+      f++; ctx.clearRect(0,0,W,H);
+      P.forEach(function(p){
+        p.x+=p.vx; p.y+=p.vy; p.vy+=.35; p.vx*=.99; p.r+=p.spin; p.life-=.006;
+        if(p.life<=0) return;
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r); ctx.globalAlpha=p.life;
+        ctx.fillStyle=p.c; ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6); ctx.restore();
+      });
+      if (f<180) requestAnimationFrame(draw); else cvs.remove();
+    })();
+  }
+
+  /* ---------- 3. 隐藏开发者面板 ---------- */
+  function devPanel(app){
+    var old = document.getElementById('__egg_panel');
+    if (old){ old.remove(); return; }
+    var d = document.createElement('div');
+    d.id='__egg_panel';
+    d.style.cssText='position:fixed;bottom:20px;right:20px;z-index:99998;width:280px;'+
+      'background:rgba(18,20,26,.94);color:#e0e0e0;border:1px solid #26a69a;border-radius:14px;'+
+      'padding:18px;font:12px/1.7 ui-monospace,monospace;backdrop-filter:blur(12px);'+
+      'box-shadow:0 12px 40px rgba(0,0,0,.4);animation:eggIn .3s ease';
+    d.innerHTML='<div style="color:#26a69a;font-weight:bold;font-size:13px;margin-bottom:10px">'+
+      '☠ SOLCAT 开发者模式</div>'+
+      '<div>应用　　: '+app+'</div>'+
+      '<div>协议　　: EGG PROTOCOL v'+E.version+'</div>'+
+      '<div>解锁数　: '+E.unlocked.size+'</div>'+
+      '<div>UA　　　: '+(navigator.userAgent.slice(0,38))+'…</div>'+
+      '<div>屏幕　　: '+innerWidth+'×'+innerHeight+'</div>'+
+      '<div>运行时间: '+Math.round(performance.now()/1000)+'s</div>'+
+      '<div style="color:#888;margin-top:10px;border-top:1px solid #333;padding-top:8px">'+
+      '已解锁: '+Array.from(E.unlocked).join(', ')+'</div>'+
+      '<button onclick="this.parentNode.remove()" style="margin-top:12px;width:100%;padding:6px;'+
+      'background:#26a69a;color:#fff;border:0;border-radius:6px;cursor:pointer">关闭</button>';
+    document.body.appendChild(d);
+  }
+
+  /* ---------- 4. 隐藏主题（赛博朋克） ---------- */
+  function cyberTheme(){
+    var s=document.getElementById('__egg_cyber');
+    if(s){ s.remove(); document.body.classList.remove('egg-cyber'); return; }
+    s=document.createElement('style'); s.id='__egg_cyber';
+    s.textContent='body.egg-cyber{filter:invert(1) hue-rotate(180deg)!important;}'+
+      'body.egg-cyber *{font-family:"Courier New",monospace!important;letter-spacing:1px}';
+    document.head.appendChild(s); document.body.classList.add('egg-cyber');
+    unlock('cyber','☠ 赛博模式已启用');
+  }
+
+  /* ---------- 5. 解锁分发 ---------- */
+  function unlock(id,msg){
+    if (E.unlocked.has(id)) return;
+    E.unlocked.add(id);
+    if (msg) console.log('%c[EGG] '+msg,'color:#ffca28;font-weight:bold');
+    E.onUnlock.forEach(function(fn){ try{fn(id);}catch(e){} });
+    var t=document.createElement('div');
+    t.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);'+
+      'z-index:99997;background:rgba(18,20,26,.92);color:#ffca28;padding:18px 28px;'+ 
+      'border:1px solid #ffca28;border-radius:12px;font:14px ui-monospace,monospace;'+
+      'pointer-events:none;animation:eggIn .3s ease;box-shadow:0 8px 30px rgba(0,0,0,.4)';
+    t.textContent='☠ '+msg;
+    document.body.appendChild(t); setTimeout(function(){t.remove();},2200);
+  }
+
+  /* ---------- 6. 事件绑定 ---------- */
+  function init(){
+    var app = document.title || 'SOLCAT App';
+    banner();
+
+    // Konami 秘籍
+    addEventListener('keydown', function(e){
+      var k = e.key.length===1 ? e.key.toLowerCase() : e.key;
+      seq.push(k); if(seq.length>KONAMI.length) seq.shift();
+      if (seq.length===KONAMI.length && KONAMI.every(function(v,i){return seq[i]===v;})){
+        seq=[]; confetti(); unlock('konami','KONAMI CODE 已激活！');
+      }
+      // Ctrl+Shift+T → 赛博主题
+      if (e.ctrlKey && e.shiftKey && (e.key==='T'||e.key==='t')){
+        e.preventDefault(); cyberTheme();
+      }
+      // 输入 solcat
+      if (e.key==='Enter' && window.__eggBuf__ === 'solcat'){ cyberTheme(); window.__eggBuf__=''; }
+      if (k.length===1) window.__eggBuf__ = ((window.__eggBuf__||'')+k).slice(-10);
+    });
+
+    // 连点标题 5 次 → 开发者面板
+    addEventListener('DOMContentLoaded', function(){
+      var targets = document.querySelectorAll('h1,.head h1,.logo,header h1');
+      var t = targets[0];
+      if(t){ t.style.cursor='default'; t.addEventListener('click',function(){
+        logoClicks++;
+        clearTimeout(logoTimer);
+        logoTimer=setTimeout(function(){logoClicks=0;},900);
+        if(logoClicks>=5){ logoClicks=0; devPanel(app); unlock('dev','开发者模式已解锁'); }
+      });}
+      // 给 body 加动画 keyframe
+      var a=document.createElement('style');
+      a.textContent='@keyframes eggIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}';
+      document.head.appendChild(a);
+    });
+
+    console.log('%c☠ 彩蛋引擎已加载 — 祝你玩得开心','color:#26a69a');
+  }
+
+  if (document.readyState==='loading') addEventListener('DOMContentLoaded',init);
+  else init();
+})();
+
+</script>
+<script>
+(function(){
+  var E = window.__SOLCAT_EGG__;
+  if (!E) return;
+
+    var fired = false;
+    E.onUnlock.push(function(id){
+      if (fired || ['konami','dev','cyber'].indexOf(id) < 0) return;
+      fired = true;
+      expr = '6*7'; calc();
+      toast('终极答案：42');
+    });
+})();
 </script>
 </body>
 </html>
