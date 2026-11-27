@@ -1,7 +1,8 @@
 {
+  "version": "2.0.0",
   "name": "计算器 · 小工具",
   "short_name": "计算器",
-  "description": "支持键盘输入的快速计算器",
+  "description": "键盘完整支持、幂运算、历史记录的计算器 v2.0",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
